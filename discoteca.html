@@ -1,0 +1,353 @@
+¡Claro que sí! Aquí tienes el **código completo y funcional** 📱💻
+
+Es una versión lista para probar, con toda la estructura que definimos: ventas, mesas, inventario, reportes y control de cubetazos, tragos, cigarros y cervezas.
+
+---
+
+## 📂 Archivo: `index.html`
+Guárdalo en tu computadora y ábrelo con cualquier navegador — funciona sin internet y sin instalar nada
+
+```html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App Control Discoteca</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        :root {
+            --fondo: #12121f;
+            --tarjeta: #1e1e2f;
+            --acento: #ff6b00;
+            --verde: #00c853;
+            --rojo: #f44336;
+            --texto: #f0f0f0;
+            --gris: #888;
+        }
+        body { background: var(--fondo); color: var(--texto); padding: 10px; }
+        .fila { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
+        .col-6 { flex: 1; min-width: 320px; }
+        .tarjeta { background: var(--tarjeta); border-radius: 12px; padding: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        h2 { font-size: 18px; margin-bottom: 14px; color: var(--acento); border-bottom: 1px solid #333; padding-bottom: 8px; }
+        .btn {
+            padding: 12px 10px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; transition: all 0.2s;
+        }
+        .btn:hover { transform: scale(1.03); }
+        .btn-naranja { background: var(--acento); color: white; }
+        .btn-verde { background: var(--verde); color: white; }
+        .btn-rojo { background: var(--rojo); color: white; }
+        .btn-azul { background: #2196f3; color: white; }
+        .btn-gris { background: #444; color: white; }
+        .grid-productos { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
+        .producto { background: #2a2a3c; border-radius: 8px; padding: 10px; text-align: center; cursor: pointer; }
+        .producto:hover { background: #383850; }
+        .producto .precio { color: var(--acento); font-weight: bold; margin-top: 4px; font-size: 15px; }
+        .producto .stock { font-size: 11px; color: var(--gris); margin-top: 2px; }
+        .cuenta-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #333; align-items: center; }
+        .eliminar { color: var(--rojo); cursor: pointer; font-weight: bold; padding: 0 6px; }
+        .total { font-size: 22px; font-weight: bold; text-align: right; margin-top: 10px; color: var(--acento); }
+        .categorias { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+        .cat { padding: 8px 12px; background: #333; border-radius: 20px; cursor: pointer; font-size: 13px; }
+        .cat.activa { background: var(--acento); }
+        .mesas-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 10px; margin-bottom: 15px; }
+        .mesa { padding: 15px 8px; background: #2a2a3c; border-radius: 8px; text-align: center; cursor: pointer; }
+        .mesa.ocupada { background: #3c2a2a; border: 2px solid var(--acento); }
+        .mesa.seleccionada { border: 2px solid white; }
+        .oculto { display: none !important; }
+        .alerta { padding: 10px; border-radius: 6px; margin: 10px 0; }
+        .alerta-baja { background: rgba(255,107,0,0.2); border: 1px solid var(--acento); }
+        .fila-doble { display: flex; gap: 10px; margin-top: 10px; }
+        .fila-doble button { flex: 1; }
+        input, select {
+            width: 100%; padding: 10px; border: none; border-radius: 6px; background: #2a2a3c; color: white; margin-bottom: 10px;
+        }
+        .tabla { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+        .tabla th, .tabla td { padding: 8px; text-align: left; border-bottom: 1px solid #333; }
+        .pestañas { display: flex; gap: 4px; margin-bottom: 15px; border-bottom: 1px solid #333; }
+        .pestaña { padding: 10px 16px; cursor: pointer; border-bottom: 3px solid transparent; }
+        .pestaña.activa { border-bottom-color: var(--acento); color: var(--acento); font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<h1 style="text-align:center; margin-bottom:15px; color:var(--acento)">🍺 DISCOTECA — Control de Ventas</h1>
+
+<div class="pestañas">
+    <div class="pestaña activa" data-pagina="ventas">🛒 Ventas</div>
+    <div class="pestaña" data-pagina="inventario">📦 Inventario</div>
+    <div class="pestaña" data-pagina="reportes">📊 Reportes</div>
+</div>
+
+<!-- PÁGINA VENTAS -->
+<div id="ventas" class="pagina">
+    <div class="fila">
+        <!-- MESAS -->
+        <div class="col-6">
+            <div class="tarjeta">
+                <h2>🪑 Mesas</h2>
+                <div class="mesas-grid" id="listaMesas"></div>
+                <button class="btn btn-naranja" style="width:100%; margin-top:8px" onclick="agregarMesa()">+ Agregar Mesa</button>
+            </div>
+
+            <div class="tarjeta" style="margin-top:15px">
+                <h2 id="tituloMesa">Selecciona una mesa</h2>
+                <div id="cuentaMesa"></div>
+                <div class="total" id="totalCuenta">Q 0.00</div>
+                <div class="fila-doble">
+                    <button class="btn btn-verde" onclick="cobrarCuenta()">💰 Cobrar</button>
+                    <button class="btn btn-gris" onclick="limpiarCuenta()">🗑️ Limpiar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- PRODUCTOS -->
+        <div class="col-6">
+            <div class="tarjeta">
+                <h2>🛍️ Productos</h2>
+                <div class="categorias">
+                    <div class="cat activa" data-cat="todo">Todo</div>
+                    <div class="cat" data-cat="cerveza">🍺 Cerveza</div>
+                    <div class="cat" data-cat="cubeta">🧊 Cubetazos</div>
+                    <div class="cat" data-cat="trago">🥃 Tragos</div>
+                    <div class="cat" data-cat="licor">🍾 Licores</div>
+                    <div class="cat" data-cat="cigarro">🚬 Cigarros</div>
+                </div>
+                <div class="grid-productos" id="listaProductos"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- PÁGINA INVENTARIO -->
+<div id="inventario" class="pagina oculto">
+    <div class="tarjeta">
+        <h2>📦 Inventario y Stock</h2>
+        <div id="alertasStock"></div>
+        <table class="tabla">
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Categoría</th>
+                    <th>Precio</th>
+                    <th>Stock</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody id="tablaInventario"></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- PÁGINA REPORTES -->
+<div id="reportes" class="pagina oculto">
+    <div class="tarjeta">
+        <h2>📊 Reporte del Día</h2>
+        <p><strong>Ventas Totales:</strong> <span id="ventasTotales">Q 0.00</span></p>
+        <p><strong>Transacciones:</strong> <span id="cantidadVentas">0</span></p>
+        <p><strong>Efectivo:</strong> <span id="pagoEfectivo">Q 0.00</span></p>
+        <p><strong>Tarjeta/Transf:</strong> <span id="pagoDigital">Q 0.00</span></p>
+        <br>
+        <h3>📈 Ventas por Categoría</h3>
+        <div id="ventasPorCat"></div>
+        <br>
+        <button class="btn btn-naranja" onclick="cerrarCaja()">📄 Cerrar Caja del Día</button>
+        <button class="btn btn-gris" onclick="exportarDatos()">📥 Exportar Datos</button>
+    </div>
+</div>
+
+<script>
+// ==============================================
+// BASE DE DATOS — SE GUARDA AUTOMÁTICAMENTE
+// ==============================================
+let productos = [
+    // CERVEZAS
+    {id:1, nombre:"Cerveza Botella", cat:"cerveza", precio:15, stock:80},
+    {id:2, nombre:"Cerveza Lata", cat:"cerveza", precio:12, stock:60},
+    {id:3, nombre:"Cerveza Litro", cat:"cerveza", precio:25, stock:40},
+    // CUBETAZOS
+    {id:4, nombre:"Cubeta 6 Cervezas", cat:"cubeta", precio:80, stock:15, descuenta:[{id:1,cant:6}]},
+    {id:5, nombre:"Cubeta 10 Cervezas", cat:"cubeta", precio:130, stock:10, descuenta:[{id:1,cant:10}]},
+    {id:6, nombre:"Cubeta 12 Latas", cat:"cubeta", precio:125, stock:8, descuenta:[{id:2,cant:12}]},
+    // TRAGOS
+    {id:7, nombre:"Ron con Coca", cat:"trago", precio:20, stock:999},
+    {id:8, nombre:"Whisky con Hielo", cat:"trago", precio:35, stock:999},
+    {id:9, nombre:"Vodka con Jugo", cat:"trago", precio:25, stock:999},
+    {id:10, nombre:"Mojito", cat:"trago", precio:28, stock:999},
+    // LICORES/BOTELLAS
+    {id:11, nombre:"Botella Ron", cat:"licor", precio:150, stock:12},
+    {id:12, nombre:"Botella Whisky", cat:"licor", precio:250, stock:8},
+    // CIGARROS
+    {id:13, nombre:"Cajetilla Cigarros", cat:"cigarro", precio:35, stock:30},
+    {id:14, nombre:"Cigarro Unitario", cat:"cigarro", precio:4, stock:300}
+];
+
+let mesas = [
+    {id:1, nombre:"Mesa 1", cuenta:[]},
+    {id:2, nombre:"Mesa 2", cuenta:[]},
+    {id:3, nombre:"Mesa 3", cuenta:[]},
+    {id:4, nombre:"Barra 1", cuenta:[]},
+    {id:5, nombre:"Barra 2", cuenta:[]}
+];
+
+let mesaActiva = null;
+let historialVentas = [];
+let catActiva = "todo";
+
+// ==============================================
+// CARGA AUTOMÁTICA AL ABRIR
+// ==============================================
+function cargarDatos() {
+    const guardado = localStorage.getItem('appDiscoteca');
+    if(guardado) {
+        const datos = JSON.parse(guardado);
+        productos = datos.productos || productos;
+        mesas = datos.mesas || mesas;
+        historialVentas = datos.historial || [];
+    }
+    renderizarTodo();
+}
+
+function guardarDatos() {
+    localStorage.setItem('appDiscoteca', JSON.stringify({
+        productos, mesas, historial: historialVentas
+    }));
+}
+
+// ==============================================
+// INTERFAZ — RENDERIZADO
+// ==============================================
+function renderizarTodo() {
+    renderizarMesas();
+    renderizarProductos();
+    renderizarCuenta();
+    renderizarInventario();
+    renderizarReportes();
+}
+
+function renderizarMesas() {
+    const cont = document.getElementById('listaMesas');
+    cont.innerHTML = mesas.map(m => `
+        <div class="mesa ${m.cuenta.length>0?'ocupada':''} ${mesaActiva?.id===m.id?'seleccionada':''}" 
+             onclick="seleccionarMesa(${m.id})">
+            <strong>${m.nombre}</strong>
+            ${m.cuenta.length>0?`<br><small>Q ${calcularTotal(m.cuenta).toFixed(2)}</small>`:''}
+        </div>
+    `).join('');
+}
+
+function renderizarProductos() {
+    const cont = document.getElementById('listaProductos');
+    const filtro = catActiva==='todo' ? productos : productos.filter(p=>p.cat===catActiva);
+    cont.innerHTML = filtro.map(p => `
+        <div class="producto" onclick="agregarACuenta(${p.id})">
+            <div>${p.nombre}</div>
+            <div class="precio">Q ${p.precio}</div>
+            <div class="stock">Stock: ${p.stock}</div>
+        </div>
+    `).join('');
+}
+
+function renderizarCuenta() {
+    const cont = document.getElementById('cuentaMesa');
+    const titulo = document.getElementById('tituloMesa');
+    const totalEl = document.getElementById('totalCuenta');
+    
+    if(!mesaActiva) {
+        cont.innerHTML = '<p style="color:var(--gris)">Selecciona una mesa para ver su cuenta</p>';
+        titulo.textContent = 'Selecciona una mesa';
+        totalEl.textContent = 'Q 0.00';
+        return;
+    }
+    
+    titulo.textContent = mesaActiva.nombre;
+    cont.innerHTML = mesaActiva.cuenta.map((item, i) => `
+        <div class="cuenta-item">
+            <span>${item.cant>1?item.cant+'x ':' '}${item.nombre}</span>
+            <span>Q ${(item.precio*item.cant).toFixed(2)}
+            <span class="eliminar" onclick="quitarDeCuenta(${i})">×</span></span>
+        </div>
+    `).join('');
+    
+    totalEl.textContent = `Q ${calcularTotal(mesaActiva.cuenta).toFixed(2)}`;
+}
+
+function calcularTotal(cuenta) {
+    return cuenta.reduce((sum, i) => sum + (i.precio*i.cant), 0);
+}
+
+function renderizarInventario() {
+    const cuerpo = document.getElementById('tablaInventario');
+    const alertas = document.getElementById('alertasStock');
+    
+    const bajos = productos.filter(p => p.stock < 10);
+    alertas.innerHTML = bajos.length ? `
+        <div class="alerta alerta-baja">
+            ⚠️ <strong>Stock Bajo:</strong> ${bajos.map(b=>b.nombre).join(', ')}
+        </div>` : '';
+    
+    cuerpo.innerHTML = productos.map(p => `
+        <tr>
+            <td>${p.nombre}</td>
+            <td>${p.cat}</td>
+            <td>Q ${p.precio}</td>
+            <td>${p.stock}</td>
+            <td>
+                <button class="btn btn-verde" style="padding:4px 8px; font-size:11px" onclick="ajustarStock(${p.id}, 5)">+5</button>
+                <button class="btn btn-rojo" style="padding:4px 8px; font-size:11px" onclick="ajustarStock(${p.id}, -1)">-1</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function renderizarReportes() {
+    const hoy = new Date().toLocaleDateString();
+    const delDia = historialVentas.filter(v => v.fecha === hoy);
+    
+    const totalEfectivo = delDia.filter(v=>v.metodo==='efectivo').reduce((s,v)=>s+v.total,0);
+    const totalDigital = delDia.filter(v=>v.metodo!=='efectivo').reduce((s,v)=>s+v.total,0);
+    
+    document.getElementById('ventasTotales').textContent = `Q ${(totalEfectivo+totalDigital).toFixed(2)}`;
+    document.getElementById('cantidadVentas').textContent = delDia.length;
+    document.getElementById('pagoEfectivo').textContent = `Q ${totalEfectivo.toFixed(2)}`;
+    document.getElementById('pagoDigital').textContent = `Q ${totalDigital.toFixed(2)}`;
+    
+    // Por categoría
+    const porCat = {};
+    delDia.forEach(v => {
+        v.items.forEach(i => {
+            porCat[i.cat] = (porCat[i.cat] || 0) + (i.precio*i.cant);
+        });
+    });
+    document.getElementById('ventasPorCat').innerHTML = Object.entries(porCat).map(([c, m]) =>
+        `<p><strong>${c}:</strong> Q ${m.toFixed(2)}</p>`
+    ).join('') || '<p style="color:var(--gris)">Sin ventas hoy</p>';
+}
+
+// ==============================================
+// ACCIONES DEL USUARIO
+// ==============================================
+function seleccionarMesa(id) {
+    mesaActiva = mesas.find(m=>m.id===id);
+    renderizarTodo();
+}
+
+function agregarACuenta(idProd) {
+    if(!mesaActiva) return alert('Primero selecciona una mesa');
+    
+    const prod = productos.find(p=>p.id===idProd);
+    if(prod.stock <= 0) return alert('Producto agotado');
+    
+    // Descontar stock
+    prod.stock--;
+    if(prod.descuenta) {
+        prod.descuenta.forEach(d => {
+            const rel = productos.find(p=>p.id===d.id);
+            if(rel) rel.stock -= d.cant;
+        });
+    }
+    
+    // Agregar a cuenta
+    const existe = mesaActiva.cuenta.find(i=>i.id===idProd);
+    if(existe) existe.cant++;
+    else mesaActiva.cuenta.push({id:prod.id,
